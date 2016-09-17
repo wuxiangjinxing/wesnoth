@@ -15,6 +15,7 @@
 #define GUI_DIALOGS_END_CREDITS_HPP_INCLUDED
 
 #include "gui/dialogs/dialog.hpp"
+#include "gui/core/window_builder.hpp"
 
 #include <vector>
 
@@ -26,7 +27,7 @@ class display;
 namespace gui2
 {
 
-class tscroll_label;
+class tscrollbar_panel;
 
 class tend_credits : public tdialog
 {
@@ -56,12 +57,17 @@ private:
 
 	size_t timer_id_;
 
-	tscroll_label* text_widget_;
+	tscrollbar_panel* text_widget_;
 
 	// The speed of auto-scrolling, specified as px/s
 	int scroll_speed_;
 
 	uint32_t last_scroll_;
+};
+
+struct tbuilder_credits_grid : public tbuilder_grid
+{
+	explicit tbuilder_credits_grid(const config& cfg);
 };
 
 } // namespace gui2

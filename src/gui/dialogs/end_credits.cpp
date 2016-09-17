@@ -17,13 +17,14 @@
 
 #include "about.hpp"
 #include "config.hpp"
+#include "config_assign.hpp"
 #include "game_config.hpp"
 #include "gui/auxiliary/find_widget.hpp"
 #include "gui/core/timer.hpp"
 #include "gui/widgets/grid.hpp"
 #include "gui/widgets/repeating_button.hpp"
 #include "gui/widgets/scrollbar.hpp"
-#include "gui/widgets/scroll_label.hpp"
+#include "gui/widgets/scrollbar_panel.hpp"
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/window.hpp"
 #include "marked-up_text.hpp"
@@ -69,6 +70,16 @@ static void parse_about_tags(const config& cfg, std::stringstream& str)
 	}
 }
 
+static void init_grid(tbuilder_grid& g)
+{
+	g.rows = g.widgets.size();
+	g.cols = 1;
+	g.row_grow_factor.resize(g.rows, 0);
+	g.col_grow_factor.resize(g.cols, 0);
+	g.flags.resize(g.rows, tgrid::BORDER_TOP | tgrid::BORDER_BOTTOM | tgrid::HORIZONTAL_ALIGN_CENTER | tgrid::VERTICAL_ALIGN_CENTER);
+	g.border_size.resize(g.rows, 5);
+}
+
 void tend_credits::pre_show(twindow& window)
 {
 	// Delay a little before beginning the scrolling
@@ -79,28 +90,24 @@ void tend_credits::pre_show(twindow& window)
 
 	connect_signal_pre_key_press(window, std::bind(&tend_credits::key_press_callback, this, _3, _4, _5));
 
-	std::stringstream str;
-	std::stringstream focus_str;
-
 	const config& credits_config = about::get_about_config();
+	auto credit_sections = std::make_shared<tbuilder_grid>(config_of("id", "text"));
 
 	// First, parse all the toplevel [about] tags
-	parse_about_tags(credits_config, str);
+	credit_sections->widgets.push_back(std::make_shared<tbuilder_credits_grid>(credits_config));
 
 	// Next, parse all the grouped [about] tags (usually by campaign)
 	for(const auto& group : credits_config.child_range("credits_group")) {
-		std::stringstream& group_stream = (group["id"] == focus_on_) ? focus_str : str;
-
-		group_stream << "\n" << "<span size='xx-large'>" << group["title"] << "</span>" << "\n";
-
-		parse_about_tags(group, group_stream);
+		auto builder = std::make_shared<tbuilder_credits_grid>(group);
+		if(group["id"] == focus_on_) {
+			credit_sections->widgets.insert(credit_sections->widgets.begin(), builder);
+		} else {
+			credit_sections->widgets.push_back(builder);
+		}
 	}
 
-	// TODO: this seems an inefficient way to place the focused group first
-	if(!focus_str.str().empty()) {
-		focus_str << str.rdbuf();
-		str.swap(focus_str);
-	}
+	// Set flags, border sizes, grow factors
+	init_grid(*credit_sections);
 
 	// Get the appropriate background images
 	backgrounds_ = about::get_background_images(focus_on_);
@@ -112,10 +119,19 @@ void tend_credits::pre_show(twindow& window)
 	// TODO: implement showing all available images as the credits scroll
 	window.canvas()[0].set_variable("background_image", variant(backgrounds_[0]));
 
-	text_widget_ = find_widget<tscroll_label>(&window, "text", false, true);
-
-	text_widget_->set_use_markup(true);
-	text_widget_->set_label(str.str());
+	tgrid& text_panel = get_parent<tgrid>(find_widget<twidget>(&window, "text", false));
+	auto text_area = std::make_shared<implementation::tbuilder_scrollbar_panel>(config_of
+		("id", "text")
+		("definition", "default")
+		("horizontal_scrollbar_mode", "never")
+		("vertical_scrollbar_mode", "always")
+		("definition", config())
+	);
+	text_area->grid = credit_sections;
+	text_widget_ = text_area->build();
+	//text_widget_->set_use_markup(true);
+	delete text_panel.swap_child("text", text_widget_, false);
+//	text_widget_->set_label(str.str());
 
 	// HACK: always hide the scrollbar, even if it's needed.
 	// This should probably be implemented as a scrollbar mode.
@@ -149,13 +165,51 @@ void tend_credits::timer_callback()
 
 void tend_credits::key_press_callback(bool&, bool&, const SDL_Keycode key)
 {
-	if(key == SDLK_UP && scroll_speed_ < 200) {
+	if(key == SDLK_UP && scroll_speed_ < 400) {
 		scroll_speed_ <<= 1;
 	}
 
-	if(key == SDLK_DOWN && scroll_speed_ > 50) {
+	if(key == SDLK_DOWN && scroll_speed_ > 25) {
 		scroll_speed_ >>= 1;
 	}
+}
+
+static tbuilder_widget_ptr make_label(std::string text, std::string size = "")
+{
+	if(!size.empty()) {
+		text = "<span size='" + size + "'>" + text + "</span>";
+	}
+	config cfg = config_of("label", config_of
+		("label", text)
+	);
+	return create_builder_widget(cfg);
+}
+
+tbuilder_credits_grid::tbuilder_credits_grid(const config& cfg)
+	: tbuilder_grid(config())
+{
+	// cfg is either a [credits_group] or the toplevel about config
+	auto sections = cfg.child_range("about");
+	bool have_title = cfg.has_attribute("title");
+	rows = sections.size() + have_title;
+
+	// First add the name, if present
+	id = "credits";
+	if(have_title) {
+		widgets.push_back(make_label(cfg["title"], "xx-large"));
+		id += '_' + cfg["title"];
+	}
+	for(const config& section : sections) {
+		std::ostringstream text;
+		if(section.has_attribute("title")) {
+			text << "<span size='x-large'>" << section["title"] << "</span>\n";
+		}
+		for(const config& entry : section.child_range("entry")) {
+			text << entry["name"] << "\n";
+		}
+		widgets.push_back(make_label(text.str()));
+	}
+	init_grid(*this);
 }
 
 } // namespace gui2

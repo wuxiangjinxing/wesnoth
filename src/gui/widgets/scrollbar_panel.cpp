@@ -150,7 +150,7 @@ tbuilder_scrollbar_panel::tbuilder_scrollbar_panel(const config& cfg)
 	assert(grid);
 }
 
-twidget* tbuilder_scrollbar_panel::build() const
+tscrollbar_panel* tbuilder_scrollbar_panel::build() const
 {
 	tscrollbar_panel* widget = new tscrollbar_panel();
 
