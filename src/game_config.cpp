@@ -422,6 +422,28 @@ void load_config(const config &v)
 		}
 	}
 }
+	
+static bool is_rgb_tuple_list(const std::vector<std::string>& list) {
+	if(split.size() % 3) != 0) {
+		return false;
+	}
+	if(split.empty()) {
+		return false;
+	}
+	if(std::all_of(list.begin(), list.end(), [](const std::string& test) {
+		return test.size() == 6;
+	})) {
+		return false;
+	}
+	try {
+		std::vector<int> rgb;
+		std::transform(list.begin(), list.end(), std::back_inserter(rgb), std::stoi);
+	} catch(std::invalid_argument_exception&) {
+		return false;
+	}
+	deprecation_message("decimal color ranges", 4, "1.14.0", "Decimal triples are no longer supported for color ranges; use hexadecimal colors instead.");
+	return true;
+}
 
 void add_color_info(const config& v, bool build_defaults)
 {
@@ -438,7 +460,11 @@ void add_color_info(const config& v, bool build_defaults)
 		std::string id = *a1;
 		std::vector<color_t> temp;
 
-		for(const auto& s : utils::split(*a2)) {
+		auto split = utils::split(*a2);
+		if(is_rgb_tuple_list(split)) {
+			continue;
+		}
+		for(const auto& s : split) {
 			try {
 				temp.push_back(color_t::from_hex_string(s));
 			} catch(std::invalid_argument&) {
@@ -467,7 +493,11 @@ void add_color_info(const config& v, bool build_defaults)
 	for(const config &cp : v.child_range("color_palette")) {
 		for(const config::attribute& rgb : cp.attribute_range()) {
 			std::vector<color_t> temp;
-			for(const auto& s : utils::split(rgb.second)) {
+			auto split = utils::split(rgb.second);
+			if(is_rgb_tuple_list(split)) {
+				continue;
+			}
+			for(const auto& s : split) {
 				try {
 					temp.push_back(color_t::from_hex_string(s));
 				} catch(std::invalid_argument&) {
@@ -497,7 +527,11 @@ const color_range& color_info(const std::string& name)
 	}
 
 	std::vector<color_t> temp;
-	for(const auto& s : utils::split(name)) {
+	auto split = utils::split(name);
+	if(is_rgb_tuple_list(split)) {
+		throw config::error(_("Invalid color range"));
+	}
+	for(const auto& s : split) {
 		try {
 			temp.push_back(color_t::from_hex_string(s));
 		} catch(std::invalid_argument&) {
@@ -511,17 +545,21 @@ const color_range& color_info(const std::string& name)
 
 const std::vector<color_t>& tc_info(const std::string& name)
 {
+	static std::vector<color_t> stv;
 	auto i = team_rgb_colors.find(name);
 	if(i != team_rgb_colors.end()) {
 		return i->second;
 	}
 
 	std::vector<color_t> temp;
-	for(const auto& s : utils::split(name)) {
+	auto split = utils::split(name);
+	if(is_rgb_tuple_list(split)) {
+		return stv;
+	}
+	for(const auto& s : splitname) {
 		try {
 			temp.push_back(color_t::from_hex_string(s));
 		} catch(std::invalid_argument&) {
-			static std::vector<color_t> stv;
 			ERR_NG << "Invalid color in palette: " << s << std::endl;
 			return stv;
 		}
