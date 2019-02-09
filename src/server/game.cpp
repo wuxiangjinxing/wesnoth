@@ -320,6 +320,7 @@ void game::start_game(const socket_ptr& starter)
 		<< "\tobservers: " << multiplayer["observer"]
 		<< "\tshuffle: "   << multiplayer["shuffle_sides"]
 		<< "\ttimer: "     << multiplayer["mp_countdown"]
+		<< "\tmods: "     << multiplayer["active_mods"]
 		<< (multiplayer["mp_countdown"].to_bool()
 			? "\treservoir time: "   + multiplayer["mp_countdown_reservoir_time"].to_string()
 				+ "\tinit time: "    + multiplayer["mp_countdown_init_time"].to_string()
