@@ -543,6 +543,26 @@ static int impl_fcntb_set(lua_State* L)
 	formula_function_ptr fcn(new lua_formula_function_defn(fcn_name, min_args, max_args, kernel));
 	tb->add_function(fcn_name, std::move(fcn));
 	lua_pushvalue(L, 3);
+	if(fcn_info.nups > 0) {
+		// Replace _ENV with a minimal environment containing only math and string functions
+		// TODO: Evaluate exactly what should be allowed here, maybe wml functions are safe too? What about GUI functions?
+		lua_newtable(L);
+		lua_getglobal(L, "math");
+		lua_setfield(L, -2, "math");
+		lua_getglobal(L, "string");
+		lua_setfield(L, -2, "string");
+		lua_getglobal(L, "stringx");
+		lua_setfield(L, -2, "stringx");
+		lua_getglobal(L, "os");
+		lua_setfield(L, -2, "os");
+		lua_newtable(L);
+		luaW_getglobal(L, "wesnoth", "random");
+		lua_setfield(L, -2, "random");
+		luaW_getglobal(L, "wesnoth", "textdomain");
+		lua_setfield(L, -2, "textdomain");
+		lua_setfield(L, -2, "wesnoth");
+		lua_setupvalue(L, -2, 1);
+	}
 	lua_rawsetp(L, LUA_REGISTRYINDEX, fcn.get());
 	return 0;
 }
