@@ -253,19 +253,8 @@ formula::formula(const tk::token* i1, const tk::token* i2, function_symbol_table
 formula::formula(expression_ptr expr, function_symbol_table* symbols) :
 	expr_(expr),
 	str_(expr->str()),
-	symbols_(symbols),
-	managing_symbols(symbols == NULL)
+	symbols_(symbols)
 {
-	if(symbols == NULL) {
-		symbols_ = new function_symbol_table;
-	}
-}
-
-formula::~formula()
-{
-	if(managing_symbols) {
-		delete symbols_;
-	}
 }
 
 formula_ptr formula::create_optional_formula(const std::string& str, function_symbol_table* symbols)

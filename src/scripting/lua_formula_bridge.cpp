@@ -266,6 +266,7 @@ variant luaW_tofaivariant(lua_State* L, int i) {
 		case LUA_TBOOLEAN:
 			return variant(lua_tointeger(L, i));
 		case LUA_TNUMBER:
+			if(lua_isinteger(L, i)) return variant(lua_tointeger(L, i));
 			return variant(lua_tonumber(L, i), variant::DECIMAL_VARIANT);
 		case LUA_TSTRING:
 			return variant(lua_tostring(L, i));
@@ -291,7 +292,7 @@ variant luaW_tofaivariant(lua_State* L, int i) {
 
 /**
  * Evaluates a formula in the formula engine.
- * - Arg 1: Formula string.
+ * - Arg 1: Formula string or object.
  * - Arg 2: optional context; can be a unit or a Lua table.
  * - Ret 1: Result of the formula.
  */
@@ -393,6 +394,8 @@ variant lua_formula_bridge::fwrapper::evaluate(const formula_callable& variables
 {
 	if(formula_ptr) {
 		return formula_ptr->evaluate(variables, fdb);
+	} else if(expr_ptr) {
+		return expr_ptr->evaluate(variables, fdb);
 	}
 	return variant();
 }
@@ -497,8 +500,8 @@ static int cfun_fcntb_call(lua_State* L)
 
 static int impl_fcntb_get(lua_State* L)
 {
-	if(!luaL_testudata(L, 1, formulaKey)) {
-		return luaW_type_error(L, 2, "formula");
+	if(!luaL_testudata(L, 1, formfcntbKey)) {
+		return luaW_type_error(L, 2, "formula function table");
 	}
 	if(!lua_isstring(L, 2)) {
 		return luaW_type_error(L, 2, lua_typename(L, lua_type(L, 2)));
@@ -522,7 +525,7 @@ static int impl_fcntb_set(lua_State* L)
 	}
 	// Make sure the function is at the top
 	// It probably is already, though
-	lua_settop(L, 2);
+	lua_settop(L, 3);
 	lua_pushvalue(L, -1);
 	lua_Debug fcn_info;
 	lua_getinfo(L, ">u", &fcn_info);
@@ -538,7 +541,7 @@ static int impl_fcntb_set(lua_State* L)
 	}
 	lua_kernel_base& kernel = lua_kernel_base::get_lua_kernel<lua_kernel_base>(L);
 	formula_function_ptr fcn(new lua_formula_function_defn(fcn_name, min_args, max_args, kernel));
-	tb->add_function(fcn_name, fcn);
+	tb->add_function(fcn_name, std::move(fcn));
 	lua_pushvalue(L, 3);
 	lua_rawsetp(L, LUA_REGISTRYINDEX, fcn.get());
 	return 0;
