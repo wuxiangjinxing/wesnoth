@@ -1027,6 +1027,9 @@ int main(int argc, char** argv)
 	UNUSED(argc);
 	UNUSED(argv);
 
+	_putenv("PANGOCAIRO_BACKEND=fontconfig");
+	_putenv("FONTCONFIG_PATH=fonts");
+
 	// windows argv is ansi encoded by default
 	std::vector<std::string> args =
 		parse_commandline_arguments(unicode_cast<std::string>(std::wstring(GetCommandLineW())));
