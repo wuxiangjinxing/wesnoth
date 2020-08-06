@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2018 by Jyrki Vesterinen <sandgtx@gmail.com>
+   Part of the Battle for Wesnoth Project https://www.wesnoth.org/
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -13,14 +13,12 @@
 
 #pragma once
 
-#include <map>
-#include <string>
+#include <mariadb++/result_set.hpp>
 
-struct chatroom_log
+class rs_base
 {
-	std::string log;
-	bool whisper;
-	std::string received_motd = "";
+    public:
+        rs_base(){}
+		virtual ~rs_base(){}
+        virtual void read(mariadb::result_set_ref rslt) =0;
 };
-
-extern std::map<std::string, chatroom_log> default_chat_log;

@@ -140,6 +140,8 @@ private:
 	std::vector<std::string> disallowed_names_;
 	std::string admin_passwd_;
 	std::string motd_;
+	std::string announcements_;
+	std::string information_;
 	std::size_t default_max_messages_;
 	std::size_t default_time_period_;
 	std::size_t concurrent_connections_;
@@ -237,6 +239,6 @@ private:
 
 void send_to_player(socket_ptr socket, simple_wml::document& doc);
 
-void send_server_message(socket_ptr socket, const std::string& message);
+void send_server_message(socket_ptr socket, const std::string& message, const std::string& type);
 
 }
