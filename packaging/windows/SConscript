@@ -16,6 +16,7 @@ for bin in binaries:
     env[bin + "_res"] = res
 if env["multilib_arch"] == "32":
     env.AppendUnique(RCFLAGS = Split("-F pe-i386"))
+Depends(env["wesnoth_res"], File("wesnoth.exe.manifest"))
 
 def WindowsInstaller(env, files):
     files = [Entry(file) for file in Flatten(files)]
