@@ -537,7 +537,7 @@ function wml_actions.petrify(cfg)
 		unit.status.petrified = true
 		-- Extract unit and put it back to update animation (not needed for recall units)
 		unit:extract()
-		unit:to_map()
+		unit:to_map(false)
 	end
 
 	for index, unit in ipairs(wesnoth.units.find_on_recall{wml.tag["and"](cfg)}) do
@@ -550,7 +550,7 @@ function wml_actions.unpetrify(cfg)
 		unit.status.petrified = false
 		-- Extract unit and put it back to update animation (not needed for recall units)
 		unit:extract()
-		unit:to_map()
+		unit:to_map(false)
 	end
 
 	for index, unit in ipairs(wesnoth.units.find_on_recall(cfg)) do

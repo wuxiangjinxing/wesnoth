@@ -553,7 +553,7 @@ if wesnoth.kernel_type() == "Game Lua Kernel" then
 			y         = from_y .. ',' .. to_y
 		}
 
-		moving_unit:to_map(to_x, to_y)
+		moving_unit:to_map(to_x, to_y, false)
 		wesnoth.wml_actions.redraw{}
 	end
 
