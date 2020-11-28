@@ -34,6 +34,7 @@
 #include "wesnothd_connection_error.hpp"
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <condition_variable>
 #include <deque>
@@ -68,7 +69,7 @@ public:
 	 * @param host    Name of the host to connect to
 	 * @param service Service identifier such as "80" or "http"
 	 */
-	wesnothd_connection(const std::string& host, const std::string& service);
+	wesnothd_connection(const std::string& host, const std::string& service, bool encrypted);
 
 	void send_data(const configr_of& request);
 
@@ -118,14 +119,18 @@ public:
 	}
 
 private:
+	bool encrypted_;
+
 	std::thread worker_thread_;
 
 	boost::asio::io_service io_service_;
 
+	boost::asio::ssl::context ssl_ctx_;
+
 	typedef boost::asio::ip::tcp::resolver resolver;
 	resolver resolver_;
 
-	typedef boost::asio::ip::tcp::socket socket;
+	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket;
 	socket socket_;
 
 	boost::system::error_code last_error_;
