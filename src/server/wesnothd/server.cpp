@@ -539,14 +539,12 @@ void server::load_config()
 	}
 #endif
 
-	// ssl setup
-	ssl_ = cfg_["ssl"].to_bool();
-	if(ssl_) {
-		setup_ssl(cfg_["crt"], cfg_["private_key"], cfg_["dhparam"]);
-		LOG_SERVER << "SSL enabled\n";
-	} else {
-		LOG_SERVER << "SSL not enabled\n";
-	}
+#ifdef SERVER_SSL
+	setup_ssl(cfg_["crt"], cfg_["private_key"], cfg_["dhparam"]);
+	LOG_SERVER << "SSL enabled\n";
+#else
+	LOG_SERVER << "SSL not enabled\n";
+#endif
 }
 
 bool server::ip_exceeds_connection_limit(const std::string& ip) const
@@ -1905,6 +1903,7 @@ void server::remove_player(socket_ptr socket)
 
 	player_connections_.erase(iter);
 
+#ifdef SERVER_SSL
 	if(socket->lowest_layer().is_open()) {
 		boost::system::error_code ec;
 		socket->shutdown(ec);
@@ -1912,6 +1911,7 @@ void server::remove_player(socket_ptr socket)
 			ERR_SERVER << "Error shutting down ssl connection: " << ec.message() << "\n";
 		}
 	}
+#endif
 
 	if(lan_server_ && player_connections_.size() == 0)
 		start_lan_server_timer();

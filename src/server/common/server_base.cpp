@@ -38,7 +38,9 @@ server_base::server_base(unsigned short port, bool keep_alive) :
 	port_(port),
 	keep_alive_(keep_alive),
 	io_service_(),
+#ifdef SERVER_SSL
 	ssl_ctx_(boost::asio::ssl::context::sslv23),
+#endif
 	acceptor_v6_(io_service_),
 	acceptor_v4_(io_service_),
 	#ifndef _WIN32
@@ -49,6 +51,7 @@ server_base::server_base(unsigned short port, bool keep_alive) :
 {
 }
 
+#ifdef SERVER_SSL
 void server_base::setup_ssl(const std::string& crt, const std::string& private_key, const std::string& dhparam)
 {
 	ssl_ctx_.set_options(boost::asio::ssl::context::default_workarounds
@@ -59,6 +62,7 @@ void server_base::setup_ssl(const std::string& crt, const std::string& private_k
 	ssl_ctx_.use_private_key_file(private_key, boost::asio::ssl::context::pem);
 	ssl_ctx_.use_tmp_dh_file(dhparam);
 }
+#endif
 
 void server_base::setup_acceptor(boost::asio::ip::tcp::acceptor& acceptor, boost::asio::ip::tcp::endpoint endpoint)
 {
@@ -93,7 +97,11 @@ void server_base::start_server()
 
 void server_base::serve(boost::asio::ip::tcp::acceptor& acceptor)
 {
-	socket_ptr socket = std::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(io_service_, ssl_ctx_);
+#ifdef SERVER_SSL
+	socket_ptr socket = std::make_shared<socket_ptr::element_type>(io_service_, ssl_ctx_);
+#else
+	socket_ptr socket = std::make_shared<socket_ptr::element_type>(io_service_);
+#endif
 	acceptor.async_accept(socket->lowest_layer(), [&acceptor, socket, this](const boost::system::error_code& error){
 		this->accept_connection(acceptor, error, socket);
 	});
@@ -125,24 +133,29 @@ void server_base::accept_connection(boost::asio::ip::tcp::acceptor& acceptor, co
 #endif
 
 	DBG_SERVER << client_address(socket) << "\tnew connection tentatively accepted\n";
-	serverside_handshake(socket);
-}
-
-void server_base::serverside_handshake(socket_ptr socket)
-{
+#ifdef SERVER_SSL
 	socket->async_handshake(boost::asio::ssl::stream_base::server,
 		[this, socket](const boost::system::error_code& error)
 		{
 			if(error) {
-				ERR_SERVER << "Handshake failed: " << error.message() << "\n";
+				ERR_SERVER << "SSL handshake failed: " << error.message() << "\n";
 			} else {
-				boost::shared_array<char> handshake(new char[4]);
-				async_read(
-							*socket, boost::asio::buffer(handshake.get(), 4),
-							std::bind(&server_base::handle_handshake, this, _1, socket, handshake)
-							);
+				serverside_handshake(socket);
 			}
-		});
+		}
+	);
+#else
+	serverside_handshake(socket);
+#endif
+}
+
+void server_base::serverside_handshake(socket_ptr socket)
+{
+	boost::shared_array<char> handshake(new char[4]);
+	async_read(
+		*socket, boost::asio::buffer(handshake.get(), 4),
+		std::bind(&server_base::handle_handshake, this, _1, socket, handshake)
+	);
 }
 
 void server_base::handle_handshake(const boost::system::error_code& error, socket_ptr socket, boost::shared_array<char> handshake)

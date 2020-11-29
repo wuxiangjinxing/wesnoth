@@ -29,8 +29,11 @@
 #include <boost/asio/signal_set.hpp>
 #include <boost/shared_array.hpp>
 
+#ifdef SERVER_SSL
 typedef std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> socket_ptr;
-//typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+#else
+typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+#endif
 
 struct server_shutdown : public game::error
 {
@@ -47,9 +50,10 @@ public:
 protected:
 	unsigned short port_;
 	bool keep_alive_;
-	bool ssl_;
 	boost::asio::io_service io_service_;
+#ifdef SERVER_SSL
 	boost::asio::ssl::context ssl_ctx_;
+#endif
 	boost::asio::ip::tcp::acceptor acceptor_v6_;
 	boost::asio::ip::tcp::acceptor acceptor_v4_;
 	void setup_ssl(const std::string& crt, const std::string& private_key, const std::string& dhparam);

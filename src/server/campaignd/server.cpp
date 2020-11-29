@@ -306,13 +306,12 @@ void server::load_config()
 	read(cfg_, *in);
 
 	// ssl setup
-	ssl_ = cfg_["ssl"].to_bool();
-	if(ssl_) {
-		setup_ssl(cfg_["crt"], cfg_["private_key"], cfg_["dhparam"]);
-		LOG_CS << "SSL enabled\n";
-	} else {
-		LOG_CS << "SSL not enabled\n";
-	}
+#ifdef SERVER_SSL
+	setup_ssl(cfg_["crt"], cfg_["private_key"], cfg_["dhparam"]);
+	LOG_CS << "SSL enabled\n";
+#else
+	LOG_CS << "SSL not enabled\n";
+#endif
 
 	read_only_ = cfg_["read_only"].to_bool(false);
 
