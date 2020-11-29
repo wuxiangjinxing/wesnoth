@@ -73,8 +73,17 @@ wesnothd_connection::wesnothd_connection(const std::string& host, const std::str
 {
 	MPTEST_LOG;
 
-	// TODO: have the client assume SSL if not LAN? or another way is needed?
-	//       maybe have it as a property in the configuration of the default list of servers that are provided with the game?
+/*
+ * Connecting to server cases:
+ * 		CASE                            FORM          SSL                DETERMINED BY		   
+ * 		----                            ----          ---                -------------
+ * 		official redirector           - server:port - requires non-SSL - server and port match game_config.cfg
+ * 		official server (redirected)  - server:port - maybe            - redirect response
+ * 		official server (no redirect) - server:port - assume SSL       - server matches game_config.cfg, port doesn't match
+ * 		LAN server                    - IP:port     - requires non-SSL - has an IP address instead of a server name or is "localhost"
+ * 		unofficial server             - server:port - assume no SSL    - server doesn't match game_config.cfg
+ * 		boost unit test               - N/A         - no               - hard-coded to false in the test initialization
+ */
 
 	// TODO: windows needs special handling?
 	//      test, and if so, then see https://stackoverflow.com/questions/39772878/reliable-way-to-get-root-ca-certificates-on-windows
@@ -85,6 +94,8 @@ wesnothd_connection::wesnothd_connection(const std::string& host, const std::str
 	if(encrypted_) {
 		ssl_ctx_.set_default_verify_paths();
 
+		// TODO: can remove this if using system-validated cert
+		//       might still be need for the MP unit tests? how to determine if this is needed - only use file if it exists?
 		ssl_ctx_.load_verify_file("certs/"+host+".crt");
 		socket_.set_verify_mode(boost::asio::ssl::verify_fail_if_no_peer_cert);
 		socket_.set_verify_callback(boost::asio::ssl::rfc2818_verification(host));

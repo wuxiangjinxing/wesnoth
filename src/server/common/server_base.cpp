@@ -33,7 +33,6 @@ static lg::log_domain log_config("config");
 #include "server/common/send_receive_wml_helpers.ipp"
 
 // TODO: test what happens when server gets unencrypted but expects encrypted and vice versa
-// TODO: move setup out of constructor so that options can be configured in the wesnothd/campaignd config files
 server_base::server_base(unsigned short port, bool keep_alive) :
 	port_(port),
 	keep_alive_(keep_alive),

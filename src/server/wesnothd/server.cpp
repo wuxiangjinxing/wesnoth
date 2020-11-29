@@ -544,6 +544,10 @@ void server::load_config()
 	LOG_SERVER << "SSL enabled\n";
 #else
 	LOG_SERVER << "SSL not enabled\n";
+	if(user_handler_) {
+		ERR_SERVER << "SSL not enabled but database support present! Exiting to avoid passwords sent in plain text.\n";
+		exit(1);
+	}
 #endif
 }
 
@@ -642,6 +646,7 @@ void server::read_version(socket_ptr socket, std::shared_ptr<simple_wml::documen
 
 		simple_wml::document response;
 
+		// TODO: needs to send another attribute for whether the client should use SSL or not
 		// Check if it is a redirected version
 		for(const auto& redirect_version : redirected_versions_) {
 			if(utils::wildcard_string_match(version_str, redirect_version.first)) {
@@ -1903,15 +1908,17 @@ void server::remove_player(socket_ptr socket)
 
 	player_connections_.erase(iter);
 
-#ifdef SERVER_SSL
 	if(socket->lowest_layer().is_open()) {
+#ifdef SERVER_SSL
 		boost::system::error_code ec;
 		socket->shutdown(ec);
 		if(ec) {
 			ERR_SERVER << "Error shutting down ssl connection: " << ec.message() << "\n";
 		}
-	}
+#else
+		socket->lowest_layer().close();
 #endif
+	}
 
 	if(lan_server_ && player_connections_.size() == 0)
 		start_lan_server_timer();
