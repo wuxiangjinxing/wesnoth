@@ -24,6 +24,7 @@
 
 class filter_context;
 class game_data;
+class game_lua_kernel;
 struct map_location;
 
 namespace game_events
@@ -105,7 +106,7 @@ public:
 	void finish_handler() const;
 
 	/** Initializes the implicit event handler for an inlined [command]. */
-	void init_handler() const;
+	void init_handler(game_lua_kernel& lk) const;
 
 	/**
 	 * The text to put in a menu for this item.
