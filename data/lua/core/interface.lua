@@ -52,8 +52,16 @@ if wesnoth.kernel_type() == "Game Lua Kernel" then
 	wesnoth.get_displayed_unit = wesnoth.deprecate_api('wesnoth.get_displayed_unit', 'wesnoth.interface.get_displayed_unit', 1, nil, wesnoth.interface.get_displayed_unit)
 	wesnoth.zoom = wesnoth.deprecate_api('wesnoth.zoom', 'wesnoth.interface.zoom', 1, nil, wesnoth.interface.zoom)
 	wesnoth.gamestate_inspector = wesnoth.deprecate_api('wesnoth.gamestate_inspector', 'gui.show_inspector', 1, nil, gui.show_inspector)
-	-- No deprecation for these since since they're not actually public API yet
+	-- No deprecation for this since since it's not actually public API yet
 	wesnoth.color_adjust = wesnoth.interface.color_adjust
-	wesnoth.set_menu_item = wesnoth.interface.set_menu_item
+	wesnoth.set_menu_item = wesnoth.deprecate_api('wesnoth.set_menu_item', 'wesnoth.interface.set_menu_item', 1, nil, function(id, cfg) 
+		-- wesnoth.set_menu_item added both the menu item and the event that it triggers
+		-- wesnoth.interface.set_menu_item only adds the menu item
+		wesnoth.interface.set_menu_item(id, cfg)
+		wesnoth.game_events.add(cfg.id, wesnoth.wml_actions.command, true)
+	end)
 	wesnoth.clear_menu_item = wesnoth.interface.clear_menu_item
+	-- Event handlers don't have a separate module Lua file so dump those here
+	wesnoth.add_event_handler = wesnoth.deprecate_api('wesnoth.add_event_hander', 'wesnoth.game_events.add', 1, nil, function(cfg) wesnoth.wml_actions.event(cfg) end)
+	wesnoth.remove_event_handler = wesnoth.deprecate_api('wesnoth.remove_event_handler', 'wesnoth.game_events.remove', 1, nil, wesnoth.game_events.remove)
 end

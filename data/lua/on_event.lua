@@ -48,5 +48,5 @@ local function on_event(eventname, arg1, arg2)
 	end
 end
 
-core_on_event = on_event
-return on_event
+core_on_event = wesnoth.deprecate_api("on_event", "wesnoth.game_events.add", 1, nil, on_event)
+return core_on_event
