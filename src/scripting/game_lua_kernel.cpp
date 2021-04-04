@@ -605,8 +605,8 @@ int game_lua_kernel::intf_get_recall_units(lua_State *L)
  * - Arg 1: string containing the event name or id.
  * - Arg 2: optional first location.
  * - Arg 3: optional second location.
- * - Arg 4: optional WML table used as the [weapon] tag.
- * - Arg 5: optional WML table used as the [second_weapon] tag.
+ * - Arg 4: optional WML table used used as the event data
+ * Typically this contains [first] as the [weapon] tag and [second] as the [second_weapon] tag.
  * - Ret 1: boolean indicating whether the event was processed or not.
  */
 int game_lua_kernel::intf_fire_event(lua_State *L, const bool by_id)
@@ -625,13 +625,7 @@ int game_lua_kernel::intf_fire_event(lua_State *L, const bool by_id)
 		}
 	}
 
-	if (!lua_isnoneornil(L, pos)) {
-		data.add_child("first", luaW_checkconfig(L, pos));
-	}
-	++pos;
-	if (!lua_isnoneornil(L, pos)) {
-		data.add_child("second", luaW_checkconfig(L, pos));
-	}
+	luaW_toconfig(L, pos, data);
 
 	bool b = false;
 
@@ -1246,6 +1240,7 @@ int game_lua_kernel::impl_current_get(lua_State *L)
 		config cfg;
 		cfg["name"] = ev.name;
 		cfg["id"]   = ev.id;
+		cfg.add_child("data", ev.data);
 		if (const config &weapon = ev.data.child("first")) {
 			cfg.add_child("weapon", weapon);
 		}
@@ -4212,8 +4207,6 @@ game_lua_kernel::game_lua_kernel(game_state & gs, play_controller & pc, reports 
 		{ "find_reach",                &dispatch<&game_lua_kernel::intf_find_reach                 >        },
 		{ "find_vacant_tile",          &dispatch<&game_lua_kernel::intf_find_vacant_tile           >        },
 		{ "find_vision_range",         &dispatch<&game_lua_kernel::intf_find_vision_range          >        },
-		{ "fire_event",                &dispatch2<&game_lua_kernel::intf_fire_event, false         >        },
-		{ "fire_event_by_id",          &dispatch2<&game_lua_kernel::intf_fire_event, true          >        },
 		{ "get_all_vars",              &dispatch<&game_lua_kernel::intf_get_all_vars               >        },
 		{ "get_end_level_data",        &dispatch<&game_lua_kernel::intf_get_end_level_data         >        },
 		{ "get_sound_source",          &dispatch<&game_lua_kernel::intf_get_sound_source           >        },
@@ -4497,6 +4490,8 @@ game_lua_kernel::game_lua_kernel(game_state & gs, play_controller & pc, reports 
 	static luaL_Reg const event_callbacks[] {
 		{ "add", &dispatch<&game_lua_kernel::intf_add_event> },
 		{ "remove", &dispatch<&game_lua_kernel::intf_remove_event> },
+		{ "fire", &dispatch2<&game_lua_kernel::intf_fire_event, false> },
+		{ "fire_by_id", &dispatch2<&game_lua_kernel::intf_fire_event, true> },
 		{ nullptr, nullptr }
 	};
 	lua_getglobal(L, "wesnoth");
