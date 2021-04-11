@@ -127,6 +127,11 @@
 0 event_test_filter_side
 0 event_test_filter_unit
 0 event_test_filter_attack
+0 event_test_filter_wfl
+0 event_test_filter_wfl2
+0 event_test_filter_lua_serializable
+0 event_test_filter_lua_dynamic
+5 event_test_filter_lua_dynamic_break_save
 0 event_test_action_wml
 0 event_test_lua_serializable
 0 event_test_lua_dynamic
