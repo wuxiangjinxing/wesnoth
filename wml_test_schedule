@@ -127,6 +127,8 @@
 0 event_test_filter_side
 0 event_test_filter_unit
 0 event_test_filter_attack
+0 test_lua_name
+0 test_lua_event_name
 0 filter_vision
 0 scatter_units
 0 has_ally
