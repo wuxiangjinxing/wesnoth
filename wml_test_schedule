@@ -135,6 +135,8 @@
 5 event_test_filter_lua_dynamic_break_save
 0 event_test_action_wml
 0 event_test_lua_serializable
+5 event_test_lua_serializable_warn
+0 event_test_lua_serializable_warn_fixed
 0 event_test_lua_dynamic
 0 event_test_lua_dynamic_advanced
 0 event_test_lua_dynamic_repeat

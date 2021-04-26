@@ -350,6 +350,11 @@ void event_handler::register_wml_event(game_lua_kernel &lk)
 {
 	if(args_.has_attribute("action")) {
 		event_ref_ = lk.save_wml_event(types_, id_, args_["action"]);
+		size_t ellipsis_pos = args_["action"].str().find("...");
+		int n_tags = args_.all_children_count();
+		if(n_tags > 0 && ellipsis_pos == std::string::npos) {
+			WRN_NG << "Found event with both action= and non-filter child tags, but the action code does not appear to use the child tags.\n";
+		}
 	} else {
 		event_ref_ = lk.save_wml_event();
 	}
