@@ -348,8 +348,8 @@ void event_handler::add_filter(std::unique_ptr<event_filter>&& filter)
 
 void event_handler::register_wml_event(game_lua_kernel &lk)
 {
-	if(args_.has_attribute("code")) {
-		event_ref_ = lk.save_wml_event(types_, id_, args_["code"]);
+	if(args_.has_attribute("action")) {
+		event_ref_ = lk.save_wml_event(types_, id_, args_["action"]);
 	} else {
 		event_ref_ = lk.save_wml_event();
 	}
