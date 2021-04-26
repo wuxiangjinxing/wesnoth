@@ -30,7 +30,7 @@ namespace game_events {struct queued_event;}
 namespace wfl
 {
 
-// An object representing the state of the game, providing access to the map and basic information
+/** An object representing the state of the game, providing access to the map and basic information */
 class gamestate_callable : public formula_callable
 {
 public:
