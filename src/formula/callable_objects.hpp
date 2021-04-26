@@ -40,7 +40,7 @@ public:
 	variant get_value(const std::string& key) const override;
 };
 
-// An object representing the state of the current event; equivalent to Lua's wesnoth.current.event_context
+/** An object representing the state of the current event; equivalent to Lua's wesnoth.current.event_context */
 class event_callable : public formula_callable
 {
 public:
