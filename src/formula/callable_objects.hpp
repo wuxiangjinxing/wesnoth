@@ -34,7 +34,6 @@ namespace wfl
 class gamestate_callable : public formula_callable
 {
 public:
-	// TODO: Constructor
 	// Currently it accesses all its state through the resources namespace, so nothing is passed into it.
 	
 	void get_inputs(formula_input_vector& inputs) const override;
