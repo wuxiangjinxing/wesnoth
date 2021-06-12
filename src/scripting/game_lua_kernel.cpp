@@ -4518,7 +4518,7 @@ game_lua_kernel::game_lua_kernel(game_state & gs, play_controller & pc, reports 
 		{"zoom", &dispatch<&game_lua_kernel::intf_zoom>},
 		{"clear_menu_item", &dispatch<&game_lua_kernel::intf_clear_menu_item>},
 		{"set_menu_item", &dispatch<&game_lua_kernel::intf_set_menu_item>},
-		{"add_floating_label", &dispatch2<&game_lua_kernel::intf_set_floating_label, true>},
+		{"add_overlay_text", &dispatch2<&game_lua_kernel::intf_set_floating_label, true>},
 		{ nullptr, nullptr }
 	};
 	lua_getglobal(L, "wesnoth");
